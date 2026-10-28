@@ -1,0 +1,2 @@
+# Optional local-video frame candidate generator. Install in a dedicated virtual environment.
+deck-extract==0.1.1
