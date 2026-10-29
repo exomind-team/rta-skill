@@ -22,6 +22,7 @@ def load_script(name):
 
 evidence = load_script('rta_trial.py')
 scope = load_script('rta_scope_diff.py')
+oral_editing = load_script('audit_oral_editing.py')
 
 
 def write_epub(path: Path, version: str, *, added_emphasis: bool, unexpected: bool = False):
@@ -46,6 +47,31 @@ def write_epub(path: Path, version: str, *, added_emphasis: bool, unexpected: bo
 
 
 class ReaderFeedbackEndToEndTests(unittest.TestCase):
+    def test_editorial_feedback_is_compared_and_generalized_without_erasing_emphasis(self):
+        case_file = FIXTURES / 'reader_feedback_cases.synthetic.json'
+        case = next(item for item in json.loads(case_file.read_text('utf-8'))['cases']
+                    if item['case_id'] == 'feedback-editorial-fidelity-02')
+        self.assertEqual(case['category'], 'editorial-quality')
+        record = {
+            'record_id':'demo-p0001',
+            'source_segment_ids':['demo-seg-1'],
+            'original_candidate_text':'呃呃我我觉得这个方法非常非常重要。',
+            'asr_punctuated_candidate_text':'呃呃，我我觉得这个方法非常非常重要。',
+            'proofread_text':'呃呃，我我觉得这个方法非常非常重要。'
+        }
+        before = oral_editing.audit_record(record)
+        categories_before = {item['category'] for item in before}
+        self.assertIn('filler_run', categories_before)
+        self.assertIn('adjacent_repetition', categories_before)
+
+        # Apply the generalized example: remove disfluency/stutter but keep emphasis.
+        revised = dict(record, proofread_text='我觉得这个方法非常非常重要。')
+        after = oral_editing.audit_record(revised)
+        categories_after = {item['category'] for item in after}
+        self.assertNotIn('filler_run', categories_after)
+        self.assertNotIn('adjacent_repetition', categories_after)
+        self.assertIn('非常非常', revised['proofread_text'])
+
     def test_feedback_binds_edition_traces_target_and_limits_repair(self):
         with tempfile.TemporaryDirectory() as folder:
             work = Path(folder)
