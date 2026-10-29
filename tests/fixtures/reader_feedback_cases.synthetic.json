@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "case_id": "feedback-reader-display-01",
+      "edition": {
+        "version": "1.0.0-rc.1",
+        "epub_sha256": null
+      },
+      "target": {
+        "unit_id": "demo-v1.0.0:demo001-p00001",
+        "epub_href": "chapter-001.xhtml#edited-p00001"
+      },
+      "category": "reader-display",
+      "observation": "A reading system does not preserve a color-only difference cue.",
+      "requested_change": "Keep additions distinguishable with a non-color style cue.",
+      "disposition": "reproduce-in-target-reader-before-closing"
+    },
+    {
+      "case_id": "feedback-editorial-fidelity-02",
+      "edition": {"version": "1.0.0-rc.1", "epub_sha256": null},
+      "target": {"unit_id": "demo-v1.0.0:demo001-p00001"},
+      "category": "editorial-quality",
+      "observation": "A reviewer finds repeated filler and supplies a preferred edit.",
+      "requested_change": "Compare against the original, preserve meaningful emphasis, and generalize only supported edits.",
+      "disposition": "source-review-and-rule-extraction"
+    },
+    {
+      "case_id": "feedback-edition-preference-03",
+      "edition": {"version": "1.0.0-rc.1", "epub_sha256": null},
+      "target": {"epub_href": "nav.xhtml"},
+      "category": "edition-preference",
+      "observation": "A reader prefers source-first comparison, shorter atlas links, and deeper navigation.",
+      "requested_change": "Apply to the requested revision and inspect the table of contents in the target reader.",
+      "disposition": "accept-as-preference-and-recheck-navigation"
+    },
+    {
+      "case_id": "feedback-practical-sufficiency-04",
+      "edition": {"version": "1.0.0-rc.1", "epub_sha256": null},
+      "target": {"unit_id": "demo-v1.0.0:demo-later"},
+      "category": "practical-sufficiency",
+      "observation": "Two sampled states are read as a complete procedure even though the middle actions are not shown.",
+      "requested_change": "Describe the sampled states and leave the transition open until a continuous source or replay supports it.",
+      "disposition": "keep-claim-open-until-evidence-or-replay"
+    }
+  ]
+}

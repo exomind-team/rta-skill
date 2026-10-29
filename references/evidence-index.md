@@ -55,3 +55,52 @@ retrieval aids. Preserve meaningful annotations and progressive states even when
 their OCR strings are almost identical. Never infer a video time from file order.
 Build/edit this cache only when it saves actual work; do not make indexing all
 materials a new front-loaded publishing stage. Telemetry is off by default.
+
+## Experimental projection and review-contract tools
+
+When a current Agent JSONL projection needs a bounded adapter, explicit lineage
+trace, declared-scope comparison, or claim-to-review binding check, the optional
+standard-library workbench is available:
+
+```bash
+python scripts/rta_trial.py doctor
+python scripts/rta_trial.py normalize --input current.jsonl --output work/normalized.jsonl --collection demo-v1
+python scripts/rta_trial.py coverage --records work/normalized.jsonl --declared-scope expected-units.json
+python scripts/rta_trial.py trace --records work/normalized.jsonl --id demo-v1:unit-001
+python scripts/rta_trial.py audit-claims --records work/normalized.jsonl --claims claims.json --reviews review-records.json
+python scripts/rta_trial.py projection-drift --projection current.jsonl --epub candidate.epub --expected-version 1.0.1
+```
+
+`normalize` accepts only documented projection shapes and writes a new file; it
+reports skipped record types and preserves pages that have locators but no OCR
+as metadata-only. It does not infer coverage or review status. `coverage` can
+compare only against an explicitly declared ID list. `trace` follows explicit
+`derived_from` IDs and reports metadata; it does not infer semantic lineage.
+
+`audit-claims` accepts an optional, separately authored `reviews` sidecar. Each
+review record names its reviewer and method, scope, assessment, limitations,
+evidence unit IDs, and the `origin_line_sha256` values it examined. This hash is
+the original JSONL row digest, not the source-media hash. The checker verifies
+that the review record binds to the current normalized rows and that its scope
+matches the claim type/target. A `REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED` status
+means those supplied fields line up; the tool does not read the source material,
+verify reviewer identity, or establish that the judgment is correct. Keep an
+unreviewed claim at `NEEDS_REVIEW`.
+
+The claim references the review separately from the source units:
+
+```json
+{"claims":[{"id":"claim-demo-1","type":"source_mapping","target_id":"figure-demo-1","evidence_ids":["demo-v1:figure-demo-1"],"review_ids":["review-demo-1"]}]}
+```
+
+The private project-local review sidecar carries `id`, `scope`, `target_id` when
+relevant, `evidence_ids`, their matching `origin_line_sha256` values, `reviewer`,
+`method`, `assessment`, and an explicit `limitations` array. A line hash binds the
+review note to an exact normalized input row; it does not bind the note to a
+source video or prove that its assessment is correct. The command reports the
+review-file digest so the result can be attached to that exact sidecar.
+
+`projection-drift` checks only recognizable edition-version strings in the
+projection and EPUB title. It does not compare body content or replace
+`validate_epub_projection.py`. These commands are optional diagnostics, not a
+unified RTA CLI or a general SourceSet implementation.

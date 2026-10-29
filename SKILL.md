@@ -9,7 +9,7 @@ description: >
   file management or a summary when a complete source-equivalent edition is wanted.
 metadata:
   short-description: Read and trace source-grounded learning publications
-  revision: "2026-10-25-projection-and-attachment-sources"
+  revision: "2026-10-29-reader-feedback-and-scoped-repair"
 ---
 
 # RTA — Read and Trace Anything
@@ -50,9 +50,10 @@ library, or run every tool merely because this skill is loaded.
 | Reading flow, uncertainty presentation, or layout | [Reader experience](references/reader-experience.md) |
 | Static diffs, term normalization, or EPUB helper input contracts | [EPUB tools](references/epub-tools.md) |
 | Many assets, difficult handoff, or repeated review | [Optional workspace](references/project-workspace.md) |
-| Finding candidate pages/frames across existing text and OCR | [Optional evidence index](references/evidence-index.md) |
+| Finding evidence candidates, tracing normalized projection records, or checking declared review bindings | [Optional evidence index](references/evidence-index.md) |
 | A complete book, coordinated sources, or reproducible versioned packaging | [Production workflow](references/production-workflow.md) |
 | Interruption, incremental acceptance, or release | [Review and recovery](references/review-and-recovery.md) |
+| A reader returns with feedback after delivery | [Reader feedback and maintenance](references/reader-feedback-and-maintenance.md) |
 
 ## Preserve teaching and source meaning
 
@@ -142,6 +143,12 @@ rebuild EPUBs on demand; keep generated binaries out of Git by default. Follow t
 production reference and verify reproducibility before pruning existing artifacts.
 Keep large sources, caches, manuscripts, and audit history in the chosen project
 workspace, not in a personal notes vault or this skill repository.
+
+After delivery, process reader feedback only when it is supplied. Bind it to the
+exact edition and locator, separate experience or preference from source-backed
+claims, and recheck only the affected dependencies. Read
+[Reader feedback and maintenance](references/reader-feedback-and-maintenance.md);
+telemetry remains off by default.
 
 Keep reusable code/tests synthetic and free of private excerpts, paths, identifiers
 and credentials. Inspect changes before a commit; publish only when authorized.

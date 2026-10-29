@@ -1,0 +1,6 @@
+{"record_type":"book","course_id":"fictional-course","title":"虚构练习书 1.0.0-rc.1 第2卷","version":"1.0.0-rc.2","volume_id":"v02"}
+{"record_type":"paragraph","version":"1.0.0-rc.2","source_id":"demo001","paragraph_id":"demo001-p00001","source_locator":"chapter-001.xhtml#edited-p00001","source_context_locator":"虚构演示 00:00:10","text":"先明确目标，再比较方案；此处没有证明操作步骤。"}
+{"record_type":"body_figure","version":"1.0.0-rc.2","source_id":"demo001","figure_id":"demo-early","source_locator":"chapter-001.xhtml#edited-p00001","sample_time":"00:10:05","time_semantics":"sample_time","caption":"早期画面未显示两个元素之间的连线。","status":"candidate"}
+{"record_type":"body_figure","version":"1.0.0-rc.2","source_id":"demo001","figure_id":"demo-later","source_locator":"chapter-001.xhtml#edited-p00001","sample_time":"00:10:40","time_semantics":"sample_time","caption":"较晚画面显示两个元素之间的虚线连接。","status":"candidate"}
+{"record_type":"uncertainty","version":"1.0.0-rc.2","source_id":"demo001","uncertainty_id":"demo-u001","source_locator":"uncertainties.xhtml#demo-u001","status":"unresolved_candidate","text":"尚未复核中间操作及重新打开后是否仍然存在。"}
+{"record_type":"agent_reading_guide","version":"1.0.0-rc.2","content":"非课程正文，不作为证据文字。"}
