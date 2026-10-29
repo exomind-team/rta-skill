@@ -314,13 +314,58 @@ def load_review_records(path: Path | None) -> tuple[dict[str, dict], str | None]
             not isinstance(k, str) or not isinstance(v, str) for k, v in hashes.items()
         ):
             raise ValueError(f'{row["id"]}: origin_line_sha256 must be an ID-to-digest map')
+        artifacts = row.get('evidence_artifacts', [])
+        if not isinstance(artifacts, list):
+            raise ValueError(f'{row["id"]}: evidence_artifacts must be an array')
+        for artifact in artifacts:
+            if not isinstance(artifact, dict) or not isinstance(artifact.get('path'), str):
+                raise ValueError(f'{row["id"]}: each evidence artifact needs a relative path')
+            artifact_path = Path(artifact['path'])
+            if artifact_path.is_absolute() or '..' in artifact_path.parts:
+                raise ValueError(f'{row["id"]}: evidence artifact path must be relative and contained')
+            if not isinstance(artifact.get('sha256'), str) or not re.fullmatch(
+                r'[0-9a-f]{64}', artifact['sha256']
+            ):
+                raise ValueError(f'{row["id"]}: evidence artifact needs a lowercase SHA-256')
         reviews[row['id']] = row
     return reviews, hashlib.sha256(raw).hexdigest()
 
 
-def audit_claims(records: Path, claims_path: Path, reviews_path: Path | None = None) -> dict:
+def verify_review_artifacts(review: dict, evidence_root: Path | None) -> tuple[bool, list[str], int]:
+    artifacts = review.get('evidence_artifacts', [])
+    if not artifacts:
+        return True, [], 0
+    if evidence_root is None:
+        return False, ['review_evidence_root_required'], 0
+    root = evidence_root.resolve()
+    if not root.is_dir():
+        return False, ['review_evidence_root_unavailable'], 0
+    failures = []
+    checked = 0
+    for artifact in artifacts:
+        candidate = (root / artifact['path']).resolve()
+        if candidate != root and root not in candidate.parents:
+            failures.append('review_evidence_path_unsafe')
+            continue
+        if not candidate.is_file():
+            failures.append('review_evidence_artifact_missing')
+            continue
+        digest = hashlib.sha256()
+        with candidate.open('rb') as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(block)
+        checked += 1
+        if digest.hexdigest() != artifact['sha256']:
+            failures.append('review_evidence_artifact_hash_mismatch')
+    return not failures, sorted(set(failures)), checked
+
+
+def audit_claims(records: Path, claims_path: Path, reviews_path: Path | None = None,
+                 evidence_root: Path | None = None) -> dict:
     units = {r['id']: r for r in load_units(records)}
     reviews, review_digest = load_review_records(reviews_path)
+    artifact_checks = {}
+    checked_artifacts = 0
     data = json.loads(claims_path.read_text(encoding='utf-8'))
     claims = data.get('claims') if isinstance(data, dict) else None
     if not isinstance(claims, list):
@@ -362,6 +407,13 @@ def audit_claims(records: Path, claims_path: Path, reviews_path: Path | None = N
                    for k in relevant):
                 reasons.append('review_not_bound_to_current_input_rows')
                 continue
+            if review_id not in artifact_checks:
+                artifact_checks[review_id] = verify_review_artifacts(review, evidence_root)
+            artifacts_ok, artifact_reasons, artifact_count = artifact_checks[review_id]
+            checked_artifacts += artifact_count
+            if not artifacts_ok:
+                reasons.extend(artifact_reasons)
+                continue
             claim_reviews.append(review)
         if missing:
             reasons.append('missing_evidence_ids')
@@ -384,11 +436,14 @@ def audit_claims(records: Path, claims_path: Path, reviews_path: Path | None = N
                 reasons.append('procedure_replay_not_established')
         if category == 'source_mapping':
             target = claim.get('target_id')
-            if not isinstance(target, str) or not target or not any(
-                r.get('scope') == 'support_of_target' and r.get('target_id') == target
-                and r.get('assessment') == 'supports' for r in claim_reviews
-            ):
+            matching_scope = [r for r in claim_reviews
+                              if r.get('scope') == 'support_of_target'
+                              and isinstance(target, str) and target
+                              and r.get('target_id') == target]
+            if not matching_scope:
                 reasons.append('evidence_scope_does_not_match_target')
+            elif not any(r.get('assessment') == 'supports' for r in matching_scope):
+                reasons.append('review_does_not_support_claim')
         out.append({'id': claim['id'], 'type': category,
                     'status': 'NEEDS_REVIEW' if reasons else 'REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED',
                     'reasons': reasons, 'missing': missing, 'held': held,
@@ -396,6 +451,7 @@ def audit_claims(records: Path, claims_path: Path, reviews_path: Path | None = N
     return {'status': 'CLAIM_CONTRACT_CHECKED', 'claims': out,
             'needs_review_count': sum(r['status'] == 'NEEDS_REVIEW' for r in out),
             'review_file_sha256': review_digest,
+            'evidence_artifacts_checked': checked_artifacts,
             'warning': 'Review bindings are supplied records; this tool does not inspect source content or verify reviewer judgments.'}
 
 
@@ -475,6 +531,7 @@ def main(argv=None) -> int:
     a.add_argument('--records', type=Path, required=True)
     a.add_argument('--claims', type=Path, required=True)
     a.add_argument('--reviews', type=Path, help='Optional separately authored review-record JSON')
+    a.add_argument('--evidence-root', type=Path, help='Optional root for relative evidence_artifacts paths')
     d = subs.add_parser('projection-drift', help='Compare edition version labels only')
     d.add_argument('--projection', type=Path, required=True)
     d.add_argument('--epub', type=Path, required=True)
@@ -489,7 +546,7 @@ def main(argv=None) -> int:
         elif args.cmd == 'trace':
             result = trace(args.records, args.id, args.include_held)
         elif args.cmd == 'audit-claims':
-            result = audit_claims(args.records, args.claims, args.reviews)
+            result = audit_claims(args.records, args.claims, args.reviews, args.evidence_root)
         elif args.cmd == 'projection-drift':
             result = projection_drift(args.projection, args.epub, args.expected_version)
         else:

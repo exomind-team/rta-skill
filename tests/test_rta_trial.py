@@ -93,15 +93,20 @@ class RtaTrialTests(unittest.TestCase):
                     "reviewer":"synthetic-reviewer","method":"manual-source-check",
                     "assessment":"supports","limitations":["Does not establish learner outcome."],
                     "time_semantics":"verified_interval"}
+            evidence=Path(folder)/'review-note.txt'
+            evidence.write_text('Synthetic interval review note.',encoding='utf-8')
+            review['evidence_artifacts']=[{'path':'review-note.txt',
+                'sha256':hashlib.sha256(evidence.read_bytes()).hexdigest()}]
             reviews=Path(folder)/'reviews.json'
             reviews.write_text(json.dumps({'reviews':[review]}),encoding='utf-8')
             spec = Path(folder)/'claims.json'
             spec.write_text(json.dumps({'claims':[{'id':'t','type':'transition',
                 'evidence_ids':[unit['id']],'review_ids':['review-a']}]}))
-            audit = lab.audit_claims(target, spec, reviews)
+            audit = lab.audit_claims(target, spec, reviews, Path(folder))
             self.assertEqual(audit['needs_review_count'],0)
             self.assertEqual(audit['claims'][0]['status'],'REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED')
             self.assertEqual(audit['review_file_sha256'],hashlib.sha256(reviews.read_bytes()).hexdigest())
+            self.assertEqual(audit['evidence_artifacts_checked'],1)
             self.assertIn('does not inspect source content',audit['warning'])
 
     def test_stale_review_row_binding_stays_open(self):
@@ -121,6 +126,41 @@ class RtaTrialTests(unittest.TestCase):
             audit=lab.audit_claims(target,claims,reviews)
             self.assertEqual(audit['needs_review_count'],1)
             self.assertIn('review_not_bound_to_current_input_rows',audit['claims'][0]['reasons'])
+
+    def test_evidence_artifact_hash_mismatch_stays_open(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source=Path(folder)/'source.jsonl';target=Path(folder)/'normal.jsonl'
+            source.write_text(json.dumps({'record_type':'paragraph','source_id':'demo:s',
+                'paragraph_id':'demo:p1','source_locator':'chapter.xhtml#p1','text':'A synthetic source row.'})+'\n',encoding='utf-8')
+            lab.normalize(source,target,'demo')
+            unit=lab.load_units(target)[0]
+            evidence=Path(folder)/'review-note.txt'
+            evidence.write_text('Current synthetic review report.',encoding='utf-8')
+            review={'id':'review-a','scope':'observed_state','evidence_ids':[unit['id']],
+                'origin_line_sha256':{unit['id']:unit['origin_line_sha256']},
+                'evidence_artifacts':[{'path':'review-note.txt','sha256':'0'*64}],
+                'reviewer':'synthetic-reviewer','method':'visual-source-check',
+                'assessment':'supports','limitations':[]}
+            reviews=Path(folder)/'reviews.json';reviews.write_text(json.dumps({'reviews':[review]}),encoding='utf-8')
+            claims=Path(folder)/'claims.json';claims.write_text(json.dumps({'claims':[{
+                'id':'state-a','type':'observed_state','evidence_ids':[unit['id']],
+                'review_ids':['review-a']}]}),encoding='utf-8')
+            audit=lab.audit_claims(target,claims,reviews,Path(folder))
+            self.assertEqual(audit['needs_review_count'],1)
+            self.assertIn('review_evidence_artifact_hash_mismatch',audit['claims'][0]['reasons'])
+            self.assertEqual(audit['evidence_artifacts_checked'],1)
+
+    def test_review_artifact_path_cannot_escape_evidence_root(self):
+        with tempfile.TemporaryDirectory() as folder:
+            reviews=Path(folder)/'reviews.json'
+            reviews.write_text(json.dumps({'reviews':[{
+                'id':'review-escape','scope':'observed_state','evidence_ids':['demo:u1'],
+                'origin_line_sha256':{'demo:u1':'a'*64},'reviewer':'synthetic-reviewer',
+                'method':'manual-check','assessment':'supports','limitations':[],
+                'evidence_artifacts':[{'path':'../outside.txt','sha256':'b'*64}]
+            }]}),encoding='utf-8')
+            with self.assertRaisesRegex(ValueError,'relative and contained'):
+                lab.load_review_records(reviews)
 
     def test_source_mapping_review_must_bind_the_claim_target(self):
         with tempfile.TemporaryDirectory() as folder:

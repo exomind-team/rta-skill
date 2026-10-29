@@ -67,7 +67,7 @@ python scripts/rta_trial.py doctor
 python scripts/rta_trial.py normalize --input current.jsonl --output work/normalized.jsonl --collection demo-v1
 python scripts/rta_trial.py coverage --records work/normalized.jsonl --declared-scope expected-units.json
 python scripts/rta_trial.py trace --records work/normalized.jsonl --id demo-v1:unit-001
-python scripts/rta_trial.py audit-claims --records work/normalized.jsonl --claims claims.json --reviews review-records.json
+python scripts/rta_trial.py audit-claims --records work/normalized.jsonl --claims claims.json --reviews review-records.json --evidence-root work/review-evidence
 python scripts/rta_trial.py projection-drift --projection current.jsonl --epub candidate.epub --expected-version 1.0.1
 ```
 
@@ -80,12 +80,16 @@ compare only against an explicitly declared ID list. `trace` follows explicit
 `audit-claims` accepts an optional, separately authored `reviews` sidecar. Each
 review record names its reviewer and method, scope, assessment, limitations,
 evidence unit IDs, and the `origin_line_sha256` values it examined. This hash is
-the original JSONL row digest, not the source-media hash. The checker verifies
-that the review record binds to the current normalized rows and that its scope
-matches the claim type/target. A `REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED` status
-means those supplied fields line up; the tool does not read the source material,
-verify reviewer identity, or establish that the judgment is correct. Keep an
-unreviewed claim at `NEEDS_REVIEW`.
+the original JSONL row digest, not the source-media hash. When a review refers to
+local evidence files, give their relative paths and expected SHA-256 values in
+`evidence_artifacts`, and pass their private base directory with `--evidence-root`.
+The checker rejects path escapes and reports missing or hash-mismatched evidence
+files. It verifies that the review record binds to the current normalized rows and
+that its scope matches the claim type/target. A
+`REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED` status means those supplied fields and
+file digests line up; the tool does not read the source material, verify reviewer
+identity, or establish that the judgment is correct. Keep an unreviewed claim at
+`NEEDS_REVIEW`.
 
 The claim references the review separately from the source units:
 
@@ -95,10 +99,12 @@ The claim references the review separately from the source units:
 
 The private project-local review sidecar carries `id`, `scope`, `target_id` when
 relevant, `evidence_ids`, their matching `origin_line_sha256` values, `reviewer`,
-`method`, `assessment`, and an explicit `limitations` array. A line hash binds the
-review note to an exact normalized input row; it does not bind the note to a
-source video or prove that its assessment is correct. The command reports the
-review-file digest so the result can be attached to that exact sidecar.
+`method`, `assessment`, an explicit `limitations` array, and any local
+`evidence_artifacts`. A line hash binds the review note to an exact normalized
+input row; an artifact hash binds it to those file bytes. Neither proves that the
+reviewer's interpretation is correct. The command reports the review-file digest
+and number of evidence artifacts checked so the result can be attached to those
+exact records.
 
 `projection-drift` checks only recognizable edition-version strings in the
 projection and EPUB title. It does not compare body content or replace

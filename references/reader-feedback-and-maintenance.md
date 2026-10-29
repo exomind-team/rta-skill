@@ -20,6 +20,10 @@ that every reader will have the same experience.
 | Edition preference | The reader wants a different comparison order, shorter link label, or deeper table of contents. | Record the preference against the edition and apply it to the requested revision; it does not require inventing a source claim. |
 | Rights or privacy concern | A reader identifies exposed personal or restricted material. | Hold the affected asset or publication scope while checking the source and release boundary. |
 
+Use a plain disposition that says what happened: `corrected_and_rechecked`,
+`accepted_as_preference`, `needs_source`, `out_of_scope`, or `not_reproduced`.
+These dispositions are project-note values, not a global issue tracker schema.
+
 ## Follow the smallest traceable repair path
 
 1. **Bind the report.** Identify the exact edition and EPUB SHA-256, then locate the chapter, EPUB href/fragment, source-unit ID, or figure. For a display issue, note the reader/version/theme only when known. If the target edition or location is unclear, ask only for the missing locator.
@@ -33,7 +37,7 @@ that every reader will have the same experience.
    python scripts/rta_scope_diff.py --before prior.epub --after candidate.epub --policy project-local-allowed-changes.json
    ```
 
-   `SCOPE_PASS` proves the package-member scope only; it does not prove semantic correctness. For claim checks, `scripts/rta_trial.py audit-claims --records normalized.jsonl --claims claims.json --reviews reviews.json` can verify an explicit review sidecar is bound to exact normalized input rows; `REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED` still does not prove the reviewer was correct or actually inspected the source.
+   `SCOPE_PASS` proves the package-member scope only; it does not prove semantic correctness. For claim checks, `scripts/rta_trial.py audit-claims --records normalized.jsonl --claims claims.json --reviews reviews.json --evidence-root private/review-evidence` can verify an explicit review sidecar and any referenced local evidence-file hashes are bound to the exact normalized input rows; `REVIEW_BINDING_READY_NOT_TRUTH_VERIFIED` still does not prove the reviewer was correct or actually inspected the source.
 7. **Close the loop clearly.** Report the old and new edition identities, what changed, which checks ran and their scope, and anything still open. Distinguish “repaired and rechecked” from “reader confirmed.” Never say the issue is resolved for all readers based on one device or one person's experience.
 8. **Generalize only when the evidence supports it.** A repeated or clearly reusable preference may become a Skill rule. Add only invented, minimal regression examples to the public repository; keep real course and reader evidence private.
 
@@ -67,3 +71,13 @@ If a later reader says a pair of sample images implies a continuous action, keep
 that interpretation open unless a continuous source interval or procedure replay
 supports it. Rewording the caption to describe the two observed states is a scoped
 repair; it does not make the action sequence known.
+
+Another synthetic regression covers image meaning: a figure description says
+“three pending tasks,” while the source image shows only a badge with the numeral
+`3` and no explanation of what it counts. The reviewer binds the image bytes and
+target figure, records that the interpretation is unsupported, and changes the
+description to “a badge displays the numeral 3.” The package validator then checks
+that the EPUB alt text matches the current Agent projection, the scope comparator
+confirms only the expected XHTML/edition members changed, and the source-support
+claim remains unresolved unless a source actually explains the badge. This guards
+against quietly reintroducing a plausible but unsupported meaning.

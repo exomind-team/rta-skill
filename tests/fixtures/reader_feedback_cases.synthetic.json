@@ -41,6 +41,18 @@
       "observation": "Two sampled states are read as a complete procedure even though the middle actions are not shown.",
       "requested_change": "Describe the sampled states and leave the transition open until a continuous source or replay supports it.",
       "disposition": "keep-claim-open-until-evidence-or-replay"
+    },
+    {
+      "case_id": "feedback-image-number-meaning-05",
+      "edition": {"version": "1.0.0-rc.1", "epub_sha256": null},
+      "target": {
+        "unit_id": "demo-v1.0.0:figure-01",
+        "epub_href": "chapter-001.xhtml#figure-01"
+      },
+      "category": "source-support",
+      "observation": "The image description says three tasks remain, but the image only shows a badge with the numeral 3.",
+      "requested_change": "Describe the visible numeral unless a source label establishes what it counts.",
+      "disposition": "check-source-then-rewrite-and-revalidate"
     }
   ]
 }
