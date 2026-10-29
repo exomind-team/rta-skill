@@ -96,6 +96,15 @@ Run one heavy media pipeline at a time by default; inspect current physical RAM,
 
 Before cleanup, distinguish sources, current deliverables, minimal reproduction/evidence records, and rebuildable intermediates. Verify the final deliverable and its dependencies first. Delete only task-owned material within verified paths and already-authorized scope; release only this task's ended processes or model instances, never unrelated applications or shared caches. Do not automatically cancel another task's timers or agents. Preserve sufficient source IDs, hashes, parameters, and decisions to reproduce the edition without retaining every failed preview.
 
+## After-delivery feedback
+
+When a reader reports an issue after delivery, use
+[`reader-feedback-and-maintenance.md`](reader-feedback-and-maintenance.md). Keep
+the report tied to the exact EPUB hash and locator, then invalidate only the
+dependent checks. A package-scope pass or metadata label is not a semantic or
+reader-experience pass. Keep real feedback private and add only generic synthetic
+regression cases to this Skill.
+
 ## Release assertions and limits
 
 Check the actual package, not just upstream JSON: ZIP/XML, metadata/navigation, local references, frozen original/current text reconstruction, diff counters and collapsed defaults, preserved assets, required inline states, end-atlas order/resource reuse, a visible `sample_time` or explicit unknown status on every atlas page, current-only Agent projection, and no JavaScript. EPUB conformance tools do not establish teaching completeness or correct image placement. Inspect the target reader for the edition actually delivered; import to Zotero only within the user's edition-specific authorization.

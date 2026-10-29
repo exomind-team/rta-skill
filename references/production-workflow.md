@@ -306,3 +306,12 @@ Use that reference's resume/handoff section after interruption and its readable-
 ## 7. Synthetic test pattern
 
 Tests should create a tiny temporary EPUB with invented text such as “A sample note.” and “A revised sample note.” Include one unchanged paragraph and one changed paragraph containing `<`, `&`, and `>` characters. Verify the output XML, exact reconstruction of both sides, counter values, default-collapsed details, preserved resource hashes, and no script elements. Never put real course excerpts or real identifiers in test fixtures.
+
+## 8. After-delivery feedback
+
+When a reader or the user returns with feedback, bind it to the delivered edition
+and target location before changing content. Read
+[`reader-feedback-and-maintenance.md`](reader-feedback-and-maintenance.md) to
+classify the report, distinguish reader experience from source-backed claims,
+and choose only the checks invalidated by the proposed repair. If no feedback was
+provided, do not create telemetry or a follow-up ledger.

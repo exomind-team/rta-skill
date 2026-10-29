@@ -5,5 +5,8 @@ dist/
 *.skill
 *.epub
 *.jsonl
+# Explicit synthetic fixtures only; project transcripts remain ignored.
+!tests/fixtures/synthetic_envelope.jsonl
+!tests/fixtures/synthetic_flat_course.jsonl
 *-audit.md
 *-validation.json

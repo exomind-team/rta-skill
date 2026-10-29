@@ -1,0 +1,11 @@
+{
+  "changed": [
+    "OEBPS/package.opf",
+    "OEBPS/chapter-001.xhtml",
+    "OEBPS/style.css"
+  ],
+  "added": [],
+  "removed": [],
+  "strict_metadata": false,
+  "strict_order": false
+}

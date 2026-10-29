@@ -1,0 +1,8 @@
+{
+  "claims": [
+    {"id":"obs-01", "type":"observed_state", "evidence_ids":["demo-v02:demo-early", "demo-v02:demo-later"]},
+    {"id":"transition-01", "type":"transition", "evidence_ids":["demo-v02:demo-early", "demo-v02:demo-later"]},
+    {"id":"replay-01", "type":"procedure", "evidence_ids":["demo-v02:demo-later"]},
+    {"id":"mapping-01", "type":"source_mapping", "target_id":"demo001-p00001", "evidence_ids":["demo-v02:demo-later"]}
+  ]
+}
